@@ -7,4 +7,4 @@ import { PrismaService } from '@prisma/prisma.service';
   providers: [TrainsService, PrismaService],
   controllers: [TrainsController],
 })
-export class SchedulesModule {}
+export class TrainsModule {}

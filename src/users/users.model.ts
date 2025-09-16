@@ -9,4 +9,4 @@ import { UsersController } from '@users/users.controller';
   controllers: [UsersController],
   exports: [],
 })
-export class AuthModule {}
+export class UsersModule {}

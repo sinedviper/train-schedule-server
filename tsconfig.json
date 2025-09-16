@@ -30,7 +30,7 @@
       "@common/*": ["src/common/*"],
       "@prisma-generated": ["generated/prisma/"],
       "@trains/*": ["src/trains/*"],
-      "@points/*": ["src/points/*"],
+      "@places/*": ["src/places/*"],
       "@lib/*": ["src/lib/*"]
     }
   },

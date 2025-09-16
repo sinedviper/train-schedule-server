@@ -1,31 +1,66 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { CreateTrainDto } from './dto/create-train.dto';
 import { UpdateTrainDto } from './dto/update-train.dto';
 
 @Injectable()
 export class TrainsService {
+  private readonly logger = new Logger(TrainsService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async createTrain(dto: CreateTrainDto) {
-    return this.prisma.train.create({ data: dto });
+    try {
+      return this.prisma.train.create({ data: dto });
+    } catch (e) {
+      this.logger.error('createTrain', e);
+      throw new BadRequestException('Failed to create train');
+    }
   }
 
   async getTrains() {
-    return this.prisma.train.findMany({ include: { schedules: true } });
+    try {
+      return this.prisma.train.findMany({ include: { schedules: true } });
+    } catch (e) {
+      this.logger.error('getTrains', e);
+      throw new BadRequestException('Failed to get trains');
+    }
   }
 
   async getTrain(id: number) {
-    const train = await this.prisma.train.findUnique({ where: { id } });
-    if (!train) throw new NotFoundException('Train not found');
-    return train;
+    try {
+      const train = await this.prisma.train.findUnique({ where: { id } });
+      if (!train) throw new NotFoundException('Train not found');
+      return train;
+    } catch (e) {
+      this.logger.error('getTrain', e);
+      if (e instanceof NotFoundException) {
+        throw e;
+      }
+      throw new BadRequestException('Failed to get train');
+    }
   }
 
   async updateTrain(id: number, dto: UpdateTrainDto) {
-    return this.prisma.train.update({ where: { id }, data: dto });
+    try {
+      return this.prisma.train.update({ where: { id }, data: dto });
+    } catch (e) {
+      this.logger.error('updateTrain', e);
+      throw new BadRequestException('Failed to update train');
+    }
   }
 
   async deleteTrain(id: number) {
-    return this.prisma.train.delete({ where: { id } });
+    try {
+      return this.prisma.train.delete({ where: { id } });
+    } catch (e) {
+      this.logger.error('deleteTrain', e);
+      throw new BadRequestException('Failed to delete train');
+    }
   }
 }

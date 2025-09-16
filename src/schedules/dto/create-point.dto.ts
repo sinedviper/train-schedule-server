@@ -2,7 +2,7 @@ import { IsDateString, IsNumber } from 'class-validator';
 
 export class CreatePointDto {
   @IsNumber()
-  placeId: bigint;
+  placeId: number;
 
   @IsDateString()
   timeToArrive: Date;

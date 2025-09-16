@@ -10,11 +10,11 @@ export class UsersController {
 
   @Get('me')
   async getProfile(@Req() req) {
-    return this.usersService.getProfile(BigInt(req.user.userId));
+    return this.usersService.getProfile(Number(req.user.userId));
   }
 
   @Patch('me')
   async updateProfile(@Req() req, @Body() dto: UpdateProfileDto) {
-    return this.usersService.updateProfile(BigInt(req.user.userId), dto);
+    return this.usersService.updateProfile(Number(req.user.userId), dto);
   }
 }
