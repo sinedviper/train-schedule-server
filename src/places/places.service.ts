@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
-import { CreatePlaceDto } from './dto/create-place.dto';
-import { UpdatePlaceDto } from './dto/update-place.dto';
+import { CreatePlacesDto } from './dto/create-places.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PlacesService {
@@ -9,7 +9,7 @@ export class PlacesService {
 
   constructor(private prisma: PrismaService) {}
 
-  async createPlace(dto: CreatePlaceDto) {
+  async createPlace(dto: CreatePlacesDto) {
     return this.prisma.place.create({ data: dto });
   }
 
@@ -36,7 +36,7 @@ export class PlacesService {
     }
   }
 
-  async updatePlace(id: number, dto: UpdatePlaceDto) {
+  async updatePlace(id: number, dto: CreatePlacesDto) {
     try {
       return this.prisma.place.update({ where: { id }, data: dto });
     } catch (e) {
@@ -50,6 +50,12 @@ export class PlacesService {
       return this.prisma.place.delete({ where: { id } });
     } catch (e) {
       this.logger.error('updatePlace', e);
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2025'
+      ) {
+        throw new NotFoundException('Place schedule not found');
+      }
       throw new NotFoundException('Failed to delete place');
     }
   }

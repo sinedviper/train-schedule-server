@@ -3,9 +3,9 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { AuthResponseDto } from './dto/auth-response.dto';
+import { ResponseAuthDto } from './dto/response-auth.dto';
 
-@ApiTags('Auth') // Группа в Swagger
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -16,7 +16,7 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'User successfully registered',
-    type: AuthResponseDto,
+    type: ResponseAuthDto,
   })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   async register(@Body() dto: RegisterDto) {
@@ -29,7 +29,7 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Login successful',
-    type: AuthResponseDto,
+    type: ResponseAuthDto,
   })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })

@@ -15,7 +15,19 @@ import { Roles } from '@auth/decorators/roles.decorator';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { Role } from '@prisma/client';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
+import { ResponseSchedulesDto } from '@schedules/dto/response-schedules.dto';
 
+@ApiTags('Schedules')
+@ApiBearerAuth()
 @Controller('schedules')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SchedulesController {
@@ -23,17 +35,46 @@ export class SchedulesController {
 
   @Roles(Role.ADMIN)
   @Post()
+  @ApiOperation({ summary: 'Create a new train schedule' })
+  @ApiBody({ type: CreateScheduleDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Schedule created successfully',
+    type: ResponseSchedulesDto,
+  })
+  @ApiResponse({ status: 400, description: 'Failed to create schedule' })
   createSchedule(@Body() dto: CreateScheduleDto) {
     return this.schedulesService.createSchedule(dto);
   }
 
   @Roles(Role.ADMIN)
   @Patch(':id')
+  @ApiOperation({ summary: 'Update an existing train schedule' })
+  @ApiParam({ name: 'id', description: 'Schedule ID', example: 1 })
+  @ApiBody({ type: CreateScheduleDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedule updated successfully',
+    type: ResponseSchedulesDto,
+  })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
   putSchedule(@Param('id') id: string, @Body() dto: CreateScheduleDto) {
     return this.schedulesService.updateSchedule(Number(id), dto);
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all train schedules' })
+  @ApiQuery({
+    name: 'trainId',
+    required: false,
+    description: 'Filter by train ID',
+    type: Number,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedules retrieved successfully',
+    type: [ResponseSchedulesDto],
+  })
   getSchedules(@Query('trainId') trainId?: string) {
     return this.schedulesService.getSchedules(
       trainId ? { trainId: Number(trainId) } : {},
@@ -41,12 +82,24 @@ export class SchedulesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get schedule by ID' })
+  @ApiParam({ name: 'id', description: 'Schedule ID', example: 1 })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedule retrieved successfully',
+    type: ResponseSchedulesDto,
+  })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
   getSchedule(@Param('id') id: string) {
     return this.schedulesService.getSchedule(Number(id));
   }
 
   @Roles(Role.ADMIN)
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a schedule' })
+  @ApiParam({ name: 'id', description: 'Schedule ID', example: 1 })
+  @ApiResponse({ status: 200, description: 'Schedule deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
   deleteSchedule(@Param('id') id: string) {
     return this.schedulesService.deleteSchedule(Number(id));
   }

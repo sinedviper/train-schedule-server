@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '@prisma/prisma.service';
 import { CreateTrainDto } from './dto/create-train.dto';
 import { UpdateTrainDto } from './dto/update-train.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TrainsService {
@@ -60,6 +61,12 @@ export class TrainsService {
       return this.prisma.train.delete({ where: { id } });
     } catch (e) {
       this.logger.error('deleteTrain', e);
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2025'
+      ) {
+        throw new NotFoundException('Train not found');
+      }
       throw new BadRequestException('Failed to delete train');
     }
   }

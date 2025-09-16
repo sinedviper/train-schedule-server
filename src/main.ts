@@ -23,7 +23,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Train API')
-    .setDescription('API for train schedules and auth')
+    .setDescription(
+      `API for train schedules and auth. Schema database: https://drawsql.app/teams/sinedviper/diagrams/train-schedule`,
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();

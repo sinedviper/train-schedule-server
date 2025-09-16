@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class AuthResponseDto {
+export class ResponseAuthDto {
   @ApiProperty({
     description:
       'JWT access token used for authenticating requests to protected endpoints.',

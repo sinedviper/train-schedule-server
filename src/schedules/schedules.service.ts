@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SchedulesService {
@@ -142,6 +143,12 @@ export class SchedulesService {
       return this.prisma.schedule.delete({ where: { id } });
     } catch (e) {
       this.logger.error('deleteSchedule', e);
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2025'
+      ) {
+        throw new NotFoundException('Schedule not found');
+      }
       throw new BadRequestException('Failed to update schedule');
     }
   }

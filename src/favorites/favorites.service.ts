@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { AddFavoritesDto } from './dto/add-favorites.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class FavoritesService {
@@ -68,7 +69,13 @@ export class FavoritesService {
       });
     } catch (e) {
       this.logger.error('removeFavorite', e);
-      throw new BadRequestException('Failed to get favorites');
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2025'
+      ) {
+        throw new NotFoundException('Favorite schedule not found');
+      }
+      throw new BadRequestException('Failed to delete favorites');
     }
   }
 }

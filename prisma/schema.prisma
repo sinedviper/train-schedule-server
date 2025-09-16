@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id        BigInt             @id @default(autoincrement())
+  id        Int                @id @default(autoincrement())
   name      String
   role      Role               @default(USER)
   login     String             @unique
@@ -22,16 +22,6 @@ enum Role {
   ADMIN
 }
 
-model Train {
-  id        BigInt     @id @default(autoincrement())
-  name      String
-  type      TrainType
-  createdAt DateTime   @default(now())
-  schedules Schedule[]
-
-  @@index([type])
-}
-
 enum TrainType {
   HIGH_SPEED
   EXPRESS
@@ -42,44 +32,35 @@ enum TrainType {
 }
 
 model Schedule {
-  id        BigInt             @id @default(autoincrement())
-  trainId   BigInt
+  id        Int                @id @default(autoincrement())
+  type      TrainType
   createdAt DateTime           @default(now())
-  train     Train              @relation(fields: [trainId], references: [id])
   points    SchedulePoint[]
   favorites FavoriteSchedule[]
+
+  @@index([type])
+}
+
+model SchedulePoint {
+  id           Int      @id @default(autoincrement())
+  timeToArrive DateTime
+  name         String
+  scheduleId   Int
+  createdAt    DateTime @default(now())
+  schedule     Schedule @relation(fields: [scheduleId], references: [id])
+
+  @@index([timeToArrive])
+  @@index([name])
+  @@index([scheduleId])
 }
 
 model FavoriteSchedule {
-  id         BigInt   @id @default(autoincrement())
-  userId     BigInt
-  scheduleId BigInt
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  scheduleId Int
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id])
   schedule   Schedule @relation(fields: [scheduleId], references: [id])
 
   @@unique([userId, scheduleId])
-}
-
-model Place {
-  id             BigInt          @id @default(autoincrement())
-  name           String
-  createdAt      DateTime        @default(now())
-  schedulePoints SchedulePoint[]
-
-  @@index([name])
-}
-
-model SchedulePoint {
-  id           BigInt   @id @default(autoincrement())
-  timeToArrive DateTime
-  placeId      BigInt
-  scheduleId   BigInt
-  createdAt    DateTime @default(now())
-  place        Place    @relation(fields: [placeId], references: [id])
-  schedule     Schedule @relation(fields: [scheduleId], references: [id])
-
-  @@index([timeToArrive])
-  @@index([placeId])
-  @@index([scheduleId])
 }
