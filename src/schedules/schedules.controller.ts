@@ -12,7 +12,7 @@ import {
 import { SchedulesService } from './schedules.service';
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { Roles } from '@auth/decorators/roles.decorator';
-import { CreateScheduleDto } from './dto/create-schedule.dto';
+import { SchedulesPostDto } from './dto/schedules-post.dto';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { Role } from '@prisma/client';
 import {
@@ -24,7 +24,7 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
-import { ResponseSchedulesDto } from '@schedules/dto/response-schedules.dto';
+import { SchedulesResponseDto } from '@schedules/dto/schedules-response.dto';
 
 @ApiTags('Schedules')
 @ApiBearerAuth()
@@ -36,14 +36,14 @@ export class SchedulesController {
   @Roles(Role.ADMIN)
   @Post()
   @ApiOperation({ summary: 'Create a new train schedule' })
-  @ApiBody({ type: CreateScheduleDto })
+  @ApiBody({ type: SchedulesPostDto })
   @ApiResponse({
     status: 201,
     description: 'Schedule created successfully',
-    type: ResponseSchedulesDto,
+    type: SchedulesResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Failed to create schedule' })
-  createSchedule(@Body() dto: CreateScheduleDto) {
+  createSchedule(@Body() dto: SchedulesPostDto) {
     return this.schedulesService.createSchedule(dto);
   }
 
@@ -51,14 +51,14 @@ export class SchedulesController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update an existing train schedule' })
   @ApiParam({ name: 'id', description: 'Schedule ID', example: 1 })
-  @ApiBody({ type: CreateScheduleDto })
+  @ApiBody({ type: SchedulesPostDto })
   @ApiResponse({
     status: 200,
     description: 'Schedule updated successfully',
-    type: ResponseSchedulesDto,
+    type: SchedulesResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
-  putSchedule(@Param('id') id: string, @Body() dto: CreateScheduleDto) {
+  putSchedule(@Param('id') id: string, @Body() dto: SchedulesPostDto) {
     return this.schedulesService.updateSchedule(Number(id), dto);
   }
 
@@ -73,7 +73,7 @@ export class SchedulesController {
   @ApiResponse({
     status: 200,
     description: 'Schedules retrieved successfully',
-    type: [ResponseSchedulesDto],
+    type: [SchedulesResponseDto],
   })
   getSchedules(@Query('trainId') trainId?: string) {
     return this.schedulesService.getSchedules(
@@ -87,7 +87,7 @@ export class SchedulesController {
   @ApiResponse({
     status: 200,
     description: 'Schedule retrieved successfully',
-    type: ResponseSchedulesDto,
+    type: SchedulesResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
   getSchedule(@Param('id') id: string) {

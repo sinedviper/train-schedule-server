@@ -28,10 +28,9 @@
       "@prisma/*": ["src/prisma/*"],
       "@config/*": ["src/config/*"],
       "@common/*": ["src/common/*"],
-      "@prisma-generated": ["generated/prisma/"],
-      "@trains/*": ["src/trains/*"],
       "@places/*": ["src/places/*"],
-      "@lib/*": ["src/lib/*"]
+      "@ws/*": ["src/ws/*"],
+      "@favorites/*": ["src/favorites/*"]
     }
   },
 }

@@ -1,7 +1,7 @@
 import { IsDateString, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreatePointDto {
+export class PointPostDto {
   @ApiProperty({
     description: 'ID of the place for this schedule point',
     example: 1,

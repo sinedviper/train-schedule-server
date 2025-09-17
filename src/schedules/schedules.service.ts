@@ -1,28 +1,21 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
-import { CreateScheduleDto } from './dto/create-schedule.dto';
-import { Prisma } from '@prisma/client';
+import { SchedulesPostDto } from './dto/schedules-post.dto';
+import { Prisma, TrainType } from '@prisma/client';
+import { SchedulesWsService } from '@ws/schedules.ws.service';
 
 @Injectable()
 export class SchedulesService {
-  private readonly logger = new Logger(SchedulesService.name);
+  constructor(
+    private prisma: PrismaService,
+    private gateway: SchedulesWsService,
+  ) {}
 
-  constructor(private prisma: PrismaService) {}
-
-  private async checkScheduleDto(dto: CreateScheduleDto) {
-    const train = await this.prisma.train.findUnique({
-      where: { id: dto.trainId },
-    });
-
-    if (!train) {
-      throw new NotFoundException(`Train with id=${dto.trainId} not found`);
-    }
-
+  private async checkScheduleDto(dto: SchedulesPostDto) {
     const places = await this.prisma.place.findMany({
       where: { id: { in: dto.points.map((p) => p.placeId) } },
     });
@@ -32,13 +25,13 @@ export class SchedulesService {
     }
   }
 
-  async createSchedule(dto: CreateScheduleDto) {
+  async createSchedule(dto: SchedulesPostDto) {
     try {
       await this.checkScheduleDto(dto);
 
       const schedule = await this.prisma.schedule.create({
         data: {
-          trainId: dto.trainId,
+          type: dto.type,
           points: {
             create: dto.points.map((p) => ({
               placeId: p.placeId,
@@ -49,30 +42,46 @@ export class SchedulesService {
         include: { points: true },
       });
 
+      this.gateway.notifyScheduleCreated(schedule);
+
       return schedule;
     } catch (e) {
-      this.logger.error('createSchedule', e);
       throw new BadRequestException('Failed to create schedule');
     }
   }
 
   async getSchedules(filter?: {
-    trainId?: number;
-    type?: string;
-    date?: string;
+    trainType?: TrainType;
+    start?: { date: string; placeId: number };
+    end?: { date: string; placeId: number };
   }) {
     try {
       return this.prisma.schedule.findMany({
         where: {
-          ...(filter?.trainId && { trainId: filter.trainId }),
+          ...(filter?.trainType && { train: { type: filter.trainType } }),
+          ...(filter?.start &&
+            filter?.end && {
+              points: {
+                some: {
+                  AND: [
+                    {
+                      placeId: filter.start.placeId,
+                      timeToArrive: { gte: new Date(filter.start.date) },
+                    },
+                    {
+                      placeId: filter.end.placeId,
+                      timeToArrive: { lte: new Date(filter.end.date) },
+                    },
+                  ],
+                },
+              },
+            }),
         },
         include: {
-          train: true,
           points: { include: { place: true } },
         },
       });
     } catch (e) {
-      this.logger.error('getSchedules', e);
       throw new BadRequestException('Failed to get schedules');
     }
   }
@@ -81,7 +90,7 @@ export class SchedulesService {
     try {
       const schedule = await this.prisma.schedule.findUnique({
         where: { id },
-        include: { train: true, points: { include: { place: true } } },
+        include: { points: { include: { place: true } } },
       });
 
       if (!schedule) {
@@ -90,7 +99,6 @@ export class SchedulesService {
 
       return schedule;
     } catch (e) {
-      this.logger.error('getSchedule', e);
       if (e instanceof NotFoundException) {
         throw e;
       }
@@ -98,7 +106,7 @@ export class SchedulesService {
     }
   }
 
-  async updateSchedule(id: number, dto: CreateScheduleDto) {
+  async updateSchedule(id: number, dto: SchedulesPostDto) {
     try {
       const schedule = await this.prisma.schedule.findUnique({
         where: { id },
@@ -110,7 +118,7 @@ export class SchedulesService {
 
       await this.checkScheduleDto(dto);
 
-      return this.prisma.$transaction(async (tx) => {
+      const updated = this.prisma.$transaction(async (tx) => {
         await tx.schedulePoint.deleteMany({
           where: { scheduleId: id },
         });
@@ -118,7 +126,7 @@ export class SchedulesService {
         return tx.schedule.update({
           where: { id },
           data: {
-            trainId: dto.trainId,
+            type: dto.type,
             points: {
               create: dto.points.map((p) => ({
                 placeId: p.placeId,
@@ -126,11 +134,14 @@ export class SchedulesService {
               })),
             },
           },
-          include: { train: true, points: { include: { place: true } } },
+          include: { points: { include: { place: true } } },
         });
       });
+
+      this.gateway.notifyScheduleUpdated(updated);
+
+      return updated;
     } catch (e) {
-      this.logger.error('updateSchedule', e);
       if (e instanceof NotFoundException) {
         throw e;
       }
@@ -140,9 +151,12 @@ export class SchedulesService {
 
   async deleteSchedule(id: number) {
     try {
-      return this.prisma.schedule.delete({ where: { id } });
+      const deleted = await this.prisma.schedule.delete({ where: { id } });
+
+      this.gateway.notifyScheduleDeleted(id);
+
+      return deleted;
     } catch (e) {
-      this.logger.error('deleteSchedule', e);
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2025'

@@ -3,10 +3,10 @@ import { PrismaModule } from '@prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '@auth/auth.module';
 import { UsersModule } from '@users/users.model';
-import { FavoritesModule } from './favorites/favorites.module';
+import { FavoritesModule } from '@favorites/favorites.module';
 import { SchedulesModule } from '@schedules/schedules.module';
-import { TrainsModule } from '@trains/trains.model';
 import { PlacesModule } from '@places/places.module';
+import { WsModule } from '@ws/ws.module';
 
 @Module({
   imports: [
@@ -16,8 +16,8 @@ import { PlacesModule } from '@places/places.module';
     UsersModule,
     FavoritesModule,
     SchedulesModule,
-    TrainsModule,
     PlacesModule,
+    WsModule,
   ],
   controllers: [],
   providers: [],

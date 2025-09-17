@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -11,11 +10,10 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { Prisma } from '@prisma/client';
+import { TJwtPayload } from '../types/auth.types';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private jwtService: JwtService,
     private prisma: PrismaService,
@@ -36,7 +34,6 @@ export class AuthService {
 
       return this.login({ login: dto.login, password: dto.password });
     } catch (e) {
-      this.logger.error('register', e);
       if (e instanceof UnauthorizedException) {
         throw e;
       }
@@ -65,7 +62,6 @@ export class AuthService {
 
       throw new UnauthorizedException('Invalid credentials');
     } catch (e) {
-      this.logger.error('validateUser', e);
       if (e instanceof UnauthorizedException) {
         throw e;
       }
@@ -83,11 +79,28 @@ export class AuthService {
         refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
       };
     } catch (e) {
-      this.logger.error('login', e);
       if (e instanceof UnauthorizedException) {
         throw e;
       }
       throw new BadRequestException('Invalid login or password.');
+    }
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify<TJwtPayload>(refreshToken);
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
+      if (!user) return null;
+
+      const newPayload = { login: user.login, sub: user.id, role: user.role };
+      return {
+        access_token: this.jwtService.sign(newPayload, { expiresIn: '1h' }),
+        refresh_token: this.jwtService.sign(newPayload, { expiresIn: '7d' }),
+      };
+    } catch (e) {
+      return null;
     }
   }
 }

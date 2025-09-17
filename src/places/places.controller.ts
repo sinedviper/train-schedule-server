@@ -13,7 +13,7 @@ import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { Roles } from '@auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { CreatePlacesDto } from './dto/create-places.dto';
+import { PlacesPostDto } from './dto/places-post.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -22,7 +22,7 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
-import { ResponsePlacesDto } from '@places/dto/response-places.dto';
+import { PlacesResponseDto } from '@places/dto/places-response.dto';
 
 @ApiTags('Places')
 @ApiBearerAuth()
@@ -34,14 +34,14 @@ export class PlacesController {
   @Roles(Role.ADMIN)
   @Post()
   @ApiOperation({ summary: 'Create a new place' })
-  @ApiBody({ type: CreatePlacesDto })
+  @ApiBody({ type: PlacesPostDto })
   @ApiResponse({
     status: 201,
     description: 'Place created successfully',
-    type: ResponsePlacesDto,
+    type: PlacesResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Failed to create place' })
-  createPlace(@Body() dto: CreatePlacesDto) {
+  createPlace(@Body() dto: PlacesPostDto) {
     return this.placeService.createPlace(dto);
   }
 
@@ -51,7 +51,7 @@ export class PlacesController {
   @ApiResponse({
     status: 200,
     description: 'List of places',
-    type: [ResponsePlacesDto],
+    type: [PlacesResponseDto],
   })
   @ApiResponse({ status: 404, description: 'No places found' })
   getPlaces() {
@@ -65,7 +65,7 @@ export class PlacesController {
   @ApiResponse({
     status: 200,
     description: 'Place details',
-    type: ResponsePlacesDto,
+    type: PlacesResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Place not found' })
   getPlace(@Param('id') id: string) {
@@ -76,14 +76,14 @@ export class PlacesController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a place by ID' })
   @ApiParam({ name: 'id', description: 'Place ID', type: Number })
-  @ApiBody({ type: CreatePlacesDto })
+  @ApiBody({ type: PlacesPostDto })
   @ApiResponse({
     status: 200,
     description: 'Place updated successfully',
-    type: ResponsePlacesDto,
+    type: PlacesResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Failed to update place' })
-  updatePlace(@Param('id') id: string, @Body() dto: CreatePlacesDto) {
+  updatePlace(@Param('id') id: string, @Body() dto: PlacesPostDto) {
     return this.placeService.updatePlace(Number(id), dto);
   }
 

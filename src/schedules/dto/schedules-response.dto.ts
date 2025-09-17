@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { TrainType } from '@prisma/client';
 
 export class SchedulePointDto {
   @ApiProperty({ description: 'Place ID', example: 1 })
@@ -11,12 +12,16 @@ export class SchedulePointDto {
   timeToArrive: Date;
 }
 
-export class ResponseSchedulesDto {
+export class SchedulesResponseDto {
   @ApiProperty({ description: 'Schedule ID', example: 1 })
   id: number;
 
-  @ApiProperty({ description: 'Train ID', example: 1 })
-  trainId: number;
+  @ApiProperty({
+    enum: TrainType,
+    description: 'Type of the train',
+    example: TrainType.HIGH_SPEED,
+  })
+  type: TrainType;
 
   @ApiProperty({
     type: [SchedulePointDto],

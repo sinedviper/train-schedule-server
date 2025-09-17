@@ -3,7 +3,7 @@ import { IsName } from '@common/validators/name.validator';
 import { IsLogin } from '@common/validators/login.validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class UpdateUsersDto {
+export class UsersPatchDto {
   @ApiPropertyOptional({
     description:
       'User name (Latin letters only, with optional spaces, 1-50 characters)',

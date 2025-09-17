@@ -1,21 +1,18 @@
 import {
   Injectable,
-  ConflictException,
   NotFoundException,
+  ConflictException,
   BadRequestException,
-  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
-import { AddFavoritesDto } from './dto/add-favorites.dto';
+import { FavoritesPostDto } from './dto/favorites-post.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class FavoritesService {
-  private readonly logger = new Logger(FavoritesService.name);
-
   constructor(private prisma: PrismaService) {}
 
-  async addFavorite(userId: number, dto: AddFavoritesDto) {
+  async addFavorite(userId: number, dto: FavoritesPostDto) {
     try {
       const schedule = await this.prisma.schedule.findUnique({
         where: { id: dto.scheduleId },
@@ -30,7 +27,6 @@ export class FavoritesService {
         },
       });
     } catch (e) {
-      this.logger.error('addFavorite', e);
       if (e instanceof NotFoundException) {
         throw e;
       }
@@ -45,14 +41,12 @@ export class FavoritesService {
         include: {
           schedule: {
             include: {
-              train: true,
               points: { include: { place: true } },
             },
           },
         },
       });
     } catch (e) {
-      this.logger.error('getFavorites', e);
       throw new BadRequestException('Failed to get favorites');
     }
   }
@@ -68,7 +62,6 @@ export class FavoritesService {
         },
       });
     } catch (e) {
-      this.logger.error('removeFavorite', e);
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2025'

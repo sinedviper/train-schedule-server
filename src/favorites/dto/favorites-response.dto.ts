@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ResponseFavoritesDto {
+export class FavoritesResponseDto {
   @ApiProperty({ description: 'ID of the favorite record', example: 1 })
   id: number;
 

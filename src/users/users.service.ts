@@ -1,16 +1,13 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
-import { UpdateUsersDto } from './dto/update-users.dto';
+import { UsersPatchDto } from './dto/users-patch.dto';
 
 @Injectable()
 export class UsersService {
-  private readonly logger = new Logger(UsersService.name);
-
   constructor(private prisma: PrismaService) {}
 
   async getProfile(userId: number) {
@@ -20,7 +17,6 @@ export class UsersService {
       const { password, ...profile } = user;
       return profile;
     } catch (e) {
-      this.logger.error('getProfile', e);
       if (e instanceof NotFoundException) {
         throw e;
       }
@@ -28,7 +24,7 @@ export class UsersService {
     }
   }
 
-  async updateProfile(userId: number, dto: UpdateUsersDto) {
+  async updateProfile(userId: number, dto: UsersPatchDto) {
     try {
       return this.prisma.user.update({
         where: { id: userId },
@@ -36,7 +32,6 @@ export class UsersService {
         select: { id: true, name: true, login: true, role: true },
       });
     } catch (e) {
-      this.logger.error('updateProfile', e);
       throw new BadRequestException('Failed to update profile');
     }
   }

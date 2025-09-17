@@ -1,6 +1,6 @@
 import { Controller, Get, Patch, Body, Req, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpdateUsersDto } from './dto/update-users.dto';
+import { UsersPatchDto } from './dto/users-patch.dto';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import {
   ApiTags,
@@ -9,7 +9,7 @@ import {
   ApiResponse,
   ApiBody,
 } from '@nestjs/swagger';
-import { ResponseUsersDto } from './dto/response-users.dto';
+import { UsersResponseDto } from './dto/users-response.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -23,7 +23,7 @@ export class UsersController {
   @ApiResponse({
     status: 200,
     description: 'User profile retrieved successfully',
-    type: ResponseUsersDto,
+    type: UsersResponseDto,
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   getProfile(@Req() req) {
@@ -32,14 +32,14 @@ export class UsersController {
 
   @Patch('me')
   @ApiOperation({ summary: 'Update the current user profile' })
-  @ApiBody({ type: UpdateUsersDto })
+  @ApiBody({ type: UsersPatchDto })
   @ApiResponse({
     status: 200,
     description: 'User profile updated successfully',
-    type: ResponseUsersDto,
+    type: UsersResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Failed to update profile' })
-  updateProfile(@Req() req, @Body() dto: UpdateUsersDto) {
+  updateProfile(@Req() req, @Body() dto: UsersPatchDto) {
     return this.usersService.updateProfile(Number(req.user.userId), dto);
   }
 }

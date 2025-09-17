@@ -1,15 +1,13 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
-import { CreatePlacesDto } from './dto/create-places.dto';
+import { PlacesPostDto } from './dto/places-post.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PlacesService {
-  private readonly logger = new Logger(PlacesService.name);
-
   constructor(private prisma: PrismaService) {}
 
-  async createPlace(dto: CreatePlacesDto) {
+  async createPlace(dto: PlacesPostDto) {
     return this.prisma.place.create({ data: dto });
   }
 
@@ -17,7 +15,6 @@ export class PlacesService {
     try {
       return this.prisma.place.findMany();
     } catch (e) {
-      this.logger.error('getPlaces', e);
       throw new NotFoundException('Failed to get places');
     }
   }
@@ -28,7 +25,6 @@ export class PlacesService {
       if (!place) throw new NotFoundException('Place not found');
       return place;
     } catch (e) {
-      this.logger.error('getPlace', e);
       if (e instanceof NotFoundException) {
         throw e;
       }
@@ -36,11 +32,10 @@ export class PlacesService {
     }
   }
 
-  async updatePlace(id: number, dto: CreatePlacesDto) {
+  async updatePlace(id: number, dto: PlacesPostDto) {
     try {
       return this.prisma.place.update({ where: { id }, data: dto });
     } catch (e) {
-      this.logger.error('updatePlace', e);
       throw new NotFoundException('Failed to update place');
     }
   }
@@ -49,7 +44,6 @@ export class PlacesService {
     try {
       return this.prisma.place.delete({ where: { id } });
     } catch (e) {
-      this.logger.error('updatePlace', e);
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2025'

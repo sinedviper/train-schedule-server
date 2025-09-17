@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
-export class ResponseUsersDto {
+export class UsersResponseDto {
   @ApiProperty({ description: 'User ID', example: 1 })
   id: number;
 

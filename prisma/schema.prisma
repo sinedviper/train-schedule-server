@@ -44,14 +44,24 @@ model Schedule {
 model SchedulePoint {
   id           Int      @id @default(autoincrement())
   timeToArrive DateTime
-  name         String
+  placeId      Int
   scheduleId   Int
   createdAt    DateTime @default(now())
+  place        Place    @relation(fields: [placeId], references: [id])
   schedule     Schedule @relation(fields: [scheduleId], references: [id])
 
   @@index([timeToArrive])
-  @@index([name])
+  @@index([placeId])
   @@index([scheduleId])
+}
+
+model Place {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  createdAt      DateTime        @default(now())
+  schedulePoints SchedulePoint[]
+
+  @@index([name])
 }
 
 model FavoriteSchedule {

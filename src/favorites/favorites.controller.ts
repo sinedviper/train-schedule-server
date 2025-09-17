@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
-import { AddFavoritesDto } from './dto/add-favorites.dto';
+import { FavoritesPostDto } from './dto/favorites-post.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -19,7 +19,7 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
-import { ResponseFavoritesDto } from './dto/response-favorites.dto';
+import { FavoritesResponseDto } from './dto/favorites-response.dto';
 
 @ApiTags('Favorites')
 @ApiBearerAuth() // JWT required
@@ -30,15 +30,15 @@ export class FavoritesController {
 
   @Post()
   @ApiOperation({ summary: 'Add a schedule to user favorites' })
-  @ApiBody({ type: AddFavoritesDto })
+  @ApiBody({ type: FavoritesPostDto })
   @ApiResponse({
     status: 201,
     description: 'Schedule added to favorites',
-    type: ResponseFavoritesDto,
+    type: FavoritesResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
   @ApiResponse({ status: 409, description: 'Schedule already in favorites' })
-  async addFavorite(@Req() req, @Body() dto: AddFavoritesDto) {
+  async addFavorite(@Req() req, @Body() dto: FavoritesPostDto) {
     return await this.favoritesService.addFavorite(
       Number(req.user.userId),
       dto,
@@ -50,7 +50,7 @@ export class FavoritesController {
   @ApiResponse({
     status: 200,
     description: 'List of favorite schedules',
-    type: [ResponseFavoritesDto],
+    type: [FavoritesResponseDto],
   })
   async getFavorites(@Req() req) {
     return this.favoritesService.getFavorites(Number(req.user.userId));

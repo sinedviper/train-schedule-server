@@ -22,7 +22,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      message = exception.getResponse() as string;
+      const res = exception.getResponse();
+      if (typeof res === 'string') {
+        message = res;
+      } else if (typeof res === 'object') {
+        const isArr = Array.isArray(res['message']);
+        if (isArr) {
+          const messages = res['message'] as string[];
+          message = messages.join(', ');
+        } else {
+          message = res['message'] as string;
+        }
+      }
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       switch (exception.code) {
         case 'P2002':
@@ -40,7 +51,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     this.logger.error(
-      `HTTP ${status} - ${message} - ${request.method} ${request.url}`,
+      `HTTP ${status} - ${JSON.stringify(message)} - ${request.method} ${request.url}`,
       exception instanceof Error ? exception.stack : '',
     );
 
