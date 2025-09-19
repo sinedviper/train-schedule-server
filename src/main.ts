@@ -5,11 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import { AllExceptionsFilter } from '@common/exceptionFilter';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { TConfiguration } from '@config/configuration';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const configService = app.get(ConfigService);
+  const configService = app.get(ConfigService<TConfiguration>);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -19,6 +20,13 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  const isDev = configService.get('nodeEnv') === 'development';
+
+  app.enableCors({
+    origin: isDev ? ['http://localhost:19006', 'http://localhost:3000'] : [],
+    credentials: true,
+  });
 
   app.useGlobalFilters(new AllExceptionsFilter());
   app.use(cookieParser());
