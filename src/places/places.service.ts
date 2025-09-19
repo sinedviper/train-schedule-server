@@ -11,9 +11,46 @@ export class PlacesService {
     return this.prisma.place.create({ data: dto });
   }
 
-  async getPlaces() {
+  async getPlaces(params?: { page?: number; limit?: number; search?: string }) {
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 20;
+    const search = params?.search ?? '';
+
     try {
-      return this.prisma.place.findMany();
+      const [places, total] = await this.prisma.$transaction([
+        this.prisma.place.findMany({
+          where: search
+            ? {
+                name: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              }
+            : {},
+          skip: (page - 1) * limit,
+          take: limit,
+          orderBy: { name: 'asc' },
+        }),
+        this.prisma.place.count({
+          where: search
+            ? {
+                name: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              }
+            : {},
+        }),
+      ]);
+
+      return {
+        data: places,
+        meta: {
+          page,
+          limit,
+          total: Math.ceil(total / limit),
+        },
+      };
     } catch (e) {
       throw new NotFoundException('Failed to get places');
     }

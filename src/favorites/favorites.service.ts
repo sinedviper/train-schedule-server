@@ -33,19 +33,35 @@ export class FavoritesService {
       throw new ConflictException('This schedule is already in favorites');
     }
   }
-
-  async getFavorites(userId: number) {
+  async getFavorites(userId: number, page = 1, limit = 20) {
     try {
-      return this.prisma.favoriteSchedule.findMany({
-        where: { userId },
-        include: {
-          schedule: {
-            include: {
-              points: { include: { place: true } },
+      const [favorites, total] = await this.prisma.$transaction([
+        this.prisma.favoriteSchedule.findMany({
+          where: { userId },
+          include: {
+            schedule: {
+              include: {
+                points: { include: { place: true } },
+              },
             },
           },
+          skip: (page - 1) * limit,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.favoriteSchedule.count({
+          where: { userId },
+        }),
+      ]);
+
+      return {
+        data: favorites,
+        meta: {
+          page,
+          limit,
+          total: Math.ceil(total / limit),
         },
-      });
+      };
     } catch (e) {
       throw new BadRequestException('Failed to get favorites');
     }

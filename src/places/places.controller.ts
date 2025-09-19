@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { PlacesService } from './places.service';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
@@ -21,6 +22,7 @@ import {
   ApiResponse,
   ApiBody,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { PlacesResponseDto } from '@places/dto/places-response.dto';
 
@@ -47,15 +49,53 @@ export class PlacesController {
 
   @Roles(Role.ADMIN)
   @Get()
-  @ApiOperation({ summary: 'Get all places' })
+  @ApiOperation({ summary: 'Get list of places with pagination and search' })
   @ApiResponse({
     status: 200,
-    description: 'List of places',
-    type: [PlacesResponseDto],
+    description: 'List of places with pagination info',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/PlaceResponseDto' },
+        },
+        meta: {
+          type: 'object',
+          properties: {
+            page: { type: 'number', example: 1 },
+            limit: { type: 'number', example: 20 },
+            total: { type: 'number', example: 5 },
+          },
+        },
+      },
+    },
   })
   @ApiResponse({ status: 404, description: 'No places found' })
-  getPlaces() {
-    return this.placeService.getPlaces();
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search by place name',
+  })
+  getPlaces(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+  ) {
+    return this.placeService.getPlaces({ page, limit, search });
   }
 
   @Roles(Role.ADMIN)

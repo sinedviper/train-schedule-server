@@ -57,37 +57,85 @@ export class SchedulesService {
     }
   }
 
-  async getSchedules(filter?: {
-    trainType?: TrainType;
-    start?: { date: string; placeId: number };
-    end?: { date: string; placeId: number };
+  async getSchedules(params?: {
+    type?: TrainType;
+    start?: { date?: string; placeId?: number };
+    end?: { date?: string; placeId?: number };
+    page?: number;
+    limit?: number;
   }) {
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 20;
+
     try {
-      return await this.prisma.schedule.findMany({
-        where: {
-          ...(filter?.trainType && { type: filter.trainType }),
-          ...(filter?.start &&
-            filter?.end && {
-              points: {
-                some: {
-                  AND: [
-                    {
-                      placeId: filter.start.placeId,
-                      timeToArrive: { gte: new Date(filter.start.date) },
-                    },
-                    {
-                      placeId: filter.end.placeId,
-                      timeToArrive: { lte: new Date(filter.end.date) },
-                    },
-                  ],
-                },
+      let firstPoint = {};
+      let secondPoint = {};
+      if (params?.start?.placeId) {
+        firstPoint = {
+          placeId: params.start.placeId,
+        };
+      }
+      if (params?.start?.date) {
+        firstPoint = {
+          timeToArrive: { gte: new Date(params.start.date) },
+        };
+      }
+      if (params?.end?.placeId) {
+        secondPoint = {
+          placeId: params.end.placeId,
+        };
+      }
+      if (params?.end?.date) {
+        secondPoint = {
+          timeToArrive: { lte: new Date(params.end.date) },
+        };
+      }
+
+      const AND: (typeof firstPoint)[] = [];
+      if (Object.keys(firstPoint).length > 0) {
+        AND.push(firstPoint);
+      }
+      if (Object.keys(secondPoint).length > 0) {
+        AND.push(secondPoint);
+      }
+
+      const [schedules, total] = await this.prisma.$transaction([
+        this.prisma.schedule.findMany({
+          where: {
+            ...(params?.type && { type: params.type }),
+            points: {
+              some: {
+                AND,
               },
-            }),
+            },
+          },
+          include: {
+            points: { include: { place: true } },
+          },
+          skip: (page - 1) * limit,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.schedule.count({
+          where: {
+            ...(params?.type && { type: params.type }),
+            points: {
+              some: {
+                AND,
+              },
+            },
+          },
+        }),
+      ]);
+
+      return {
+        data: schedules,
+        meta: {
+          page,
+          limit,
+          total: Math.ceil(total / limit),
         },
-        include: {
-          points: { include: { place: true } },
-        },
-      });
+      };
     } catch (e) {
       throw new BadRequestException('Failed to get schedules');
     }

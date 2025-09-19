@@ -8,7 +8,6 @@ import {
   UseGuards,
   Query,
   Patch,
-  BadRequestException,
 } from '@nestjs/common';
 import { SchedulesService } from './schedules.service';
 import { RolesGuard } from '@auth/guards/roles.guard';
@@ -64,41 +63,71 @@ export class SchedulesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all train schedules' })
+  @ApiOperation({
+    summary: 'Get train schedules with filters, pagination, and place info',
+  })
   @ApiQuery({
     name: 'trainType',
     required: false,
-    description: 'Filter by train type',
     enum: TrainType,
+    description: 'Filter by train type',
   })
   @ApiQuery({
     name: 'startDate',
     required: false,
-    description: 'Start date (ISO string)',
     type: String,
+    description: 'Start date (ISO string)',
   })
   @ApiQuery({
     name: 'startPlaceId',
     required: false,
-    description: 'Start place ID',
     type: Number,
+    description: 'Start place ID',
   })
   @ApiQuery({
     name: 'endDate',
     required: false,
-    description: 'End date (ISO string)',
     type: String,
+    description: 'End date (ISO string)',
   })
   @ApiQuery({
     name: 'endPlaceId',
     required: false,
-    description: 'End place ID',
     type: Number,
+    description: 'End place ID',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number for pagination',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
   })
   @ApiResponse({
     status: 200,
-    description: 'Schedules retrieved successfully',
-    type: [SchedulesResponseDto],
+    description: 'Schedules retrieved successfully with pagination',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/SchedulesResponseDto' },
+        },
+        meta: {
+          type: 'object',
+          properties: {
+            page: { type: 'number', example: 1 },
+            limit: { type: 'number', example: 20 },
+            total: { type: 'number', example: 5 },
+          },
+        },
+      },
+    },
   })
   async getSchedules(
     @Query('trainType') trainType?: TrainType,
@@ -106,35 +135,25 @@ export class SchedulesController {
     @Query('startPlaceId') startPlaceId?: string,
     @Query('endDate') endDate?: string,
     @Query('endPlaceId') endPlaceId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    if (
-      (startDate && !startPlaceId) ||
-      (startPlaceId && !startDate) ||
-      (endDate && !endPlaceId) ||
-      (endPlaceId && !endDate)
-    ) {
-      throw new BadRequestException(
-        'Both date and placeId must be provided for start and end filters',
-      );
-    }
-
     const filter: {
       trainType?: TrainType;
-      start?: { date: string; placeId: number };
-      end?: { date: string; placeId: number };
-    } = {};
+      start?: { date?: string; placeId?: number };
+      end?: { date?: string; placeId?: number };
+      page?: number;
+      limit?: number;
+    } = {
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    };
 
-    if (trainType) {
-      filter.trainType = trainType;
-    }
-
-    if (startDate && startPlaceId) {
+    if (trainType) filter.trainType = trainType;
+    if (startDate && startPlaceId)
       filter.start = { date: startDate, placeId: Number(startPlaceId) };
-    }
-
-    if (endDate && endPlaceId) {
+    if (endDate && endPlaceId)
       filter.end = { date: endDate, placeId: Number(endPlaceId) };
-    }
 
     return await this.schedulesService.getSchedules(filter);
   }
