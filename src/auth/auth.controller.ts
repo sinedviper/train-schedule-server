@@ -51,12 +51,7 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'New access token generated, refresh token updated in cookie',
-    schema: {
-      type: 'object',
-      properties: {
-        access_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR...' },
-      },
-    },
+    type: AuthResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Refresh token missing or invalid' })
   async refresh(@Body() body: { refreshToken?: string }) {

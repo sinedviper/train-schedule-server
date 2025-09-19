@@ -102,9 +102,11 @@ export class AuthService {
     try {
       if (!refreshToken) return null;
       const payload = this.jwtService.verify<TJwtPayload>(refreshToken);
+
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
       });
+
       if (!user || refreshToken !== user.refreshToken) return null;
 
       const { access_token, refresh_token } = this.createJwt(user);
