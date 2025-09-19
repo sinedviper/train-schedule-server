@@ -52,7 +52,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     this.logger.error(
       `HTTP ${status} - ${JSON.stringify(message)} - ${request.method} ${request.url}`,
-      exception instanceof Error ? exception.stack : '',
+      exception,
     );
 
     response.status(status).json({
