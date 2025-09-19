@@ -1,98 +1,228 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Train Schedule Server
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A backend service for managing train schedules, built with NestJS and modern web technologies.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📂 Project Structure
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```
+src/
+├── auth/                    # Authentication module
+│   ├── decorators/          # Custom decorators for auth
+│   ├── dto/                 # Data transfer objects
+│   ├── guards/              # Auth guards
+│   ├── auth.controller.ts   # Auth endpoints
+│   ├── auth.module.ts       # Auth module definition
+│   └── auth.service.ts      # Auth business logic
+│
+├── common/                  # Shared utilities and validators
+│   └── validators/          # Custom validation decorators
+│
+├── config/                  # Configuration module
+│   ├── config.module.ts     # Config module definition
+│   ├── configuration.ts     # Configuration types
+│   └── validationSchema.ts  # Environment validation
+│
+├── favorites/               # Favorites module
+│   └── dto/                 # Favorites DTOs
+│
+├── places/                  # Places module
+│   └── dto/                 # Places DTOs
+│
+├── prisma/                  # Prisma ORM
+│   └── prisma.service.ts    # Database service
+│
+├── schedules/               # Schedules module
+│   └── dto/                 # Schedule DTOs
+│
+├── types/                   # Global TypeScript types
+│
+├── users/                   # Users module
+│   └── dto/                 # User DTOs
+│
+├── ws/                      # WebSocket module
+│   └── events/              # WebSocket events
+│
+├── app.controller.ts        # Main app controller
+├── app.module.ts            # Root module
+└── main.ts                  # Application entry point
 ```
 
-## Compile and run the project
+## 🗄️ Data Models
+
+### User
+- `id`: Unique identifier (auto-increment)
+- `name`: User's full name
+- `role`: User role (USER or ADMIN)
+- `login`: Unique login identifier
+- `password`: Hashed password
+- `refreshToken`: JWT refresh token
+- `createdAt`: Account creation timestamp
+- `favorites`: User's favorite schedules
+
+### Schedule
+- `id`: Unique identifier (auto-increment)
+- `type`: Type of train (HIGH_SPEED, EXPRESS, etc.)
+- `createdAt`: Schedule creation timestamp
+- `points`: List of schedule points
+- `favorites`: Users who favorited this schedule
+
+### SchedulePoint
+- `id`: Unique identifier (auto-increment)
+- `timeToArrive`: Scheduled arrival time
+- `placeId`: Reference to Place
+- `scheduleId`: Reference to Schedule
+- `order`: Point order in schedule
+- `place`: Related Place entity
+- `schedule`: Related Schedule entity
+
+### Place
+- `id`: Unique identifier (auto-increment)
+- `name`: Place name (unique)
+- `createdAt`: Creation timestamp
+- `schedulePoints`: Related schedule points
+
+### FavoriteSchedule
+- `id`: Unique identifier (auto-increment)
+- `userId`: Reference to User
+- `scheduleId`: Reference to Schedule
+- `createdAt`: Favorite creation timestamp
+- `user`: Related User entity
+- `schedule`: Related Schedule entity
+
+## 🚀 Features
+
+- **RESTful API** - Clean and intuitive API endpoints
+- **Authentication** - Secure JWT-based authentication
+- **Real-time Updates** - WebSocket support for real-time schedule updates
+- **Validation** - Request validation using class-validator
+- **Type Safety** - Full TypeScript support
+- **Database** - Prisma ORM for database operations
+- **Environment Configuration** - Easy environment management with @nestjs/config
+
+## 🛠️ Tech Stack
+
+### Core Dependencies
+- **@nestjs/common** - Core NestJS framework
+- **@nestjs/core** - NestJS runtime system
+- **@nestjs/platform-express** - Express web server integration
+- **@nestjs/platform-socket.io** - WebSocket support via Socket.IO
+- **rxjs** - Reactive programming library
+
+### Authentication & Security
+- **@nestjs/passport** - Authentication middleware
+- **@nestjs/jwt** - JWT utilities
+- **passport-jwt** - JWT strategy for Passport
+- **bcrypt** - Password hashing
+- **cookie-parser** - Parse HTTP request cookies
+
+### Database
+- **@prisma/client** - Type-safe database client
+- **prisma** - Database ORM and migrations
+
+### Validation & Serialization
+- **class-validator** - Decorator-based validation
+- **class-transformer** - Object transformation and serialization
+- **joi** - Schema validation
+
+### Development Tools
+- **@nestjs/cli** - NestJS command line tools
+- **typescript** - TypeScript language support
+- **eslint** - Code linting
+- **prettier** - Code formatting
+- **jest** - Testing framework
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v16 or later)
+- npm or yarn package manager
+- PostgreSQL database (or another database supported by Prisma)
+
+### Installation
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/your-username/train-schedule-server.git
+   cd train-schedule-server
+   ```
+
+2. Install dependencies
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables
+   ```bash
+   cp .env.example .env
+   ```
+   Update the `.env` file with your database credentials and other configuration.
+
+4. Run database migrations
+   ```bash
+   npx prisma migrate dev
+   ```
+
+### Running the Application
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
+# Development mode with hot-reload
 $ npm run start:dev
 
-# production mode
+# Production build
+$ npm run build
 $ npm run start:prod
 ```
 
-## Run tests
+The API will be available at `http://localhost:3000` by default.
+
+## 🧪 Testing
 
 ```bash
-# unit tests
+# Unit tests
 $ npm run test
 
-# e2e tests
+# E2E tests
 $ npm run test:e2e
 
-# test coverage
+# Test coverage
 $ npm run test:cov
 ```
 
-## Deployment
+## 🌐 API Documentation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+After starting the server, you can access the Swagger documentation at:
+```
+http://localhost:3000/api
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 📝 Environment Variables
 
-## Resources
+Create a `.env` file in the root directory with the following variables:
 
-Check out a few resources that may come in handy when working with NestJS:
+```env
+# App
+PORT=3000
+NODE_ENV=development
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/train_schedule"
 
-## Support
+# JWT
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=1d
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Other configuration...
+```
 
-## Stay in touch
+## 🤝 Contributing
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## License
+## 📄 License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
