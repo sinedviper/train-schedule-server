@@ -68,7 +68,6 @@ export class SchedulesService {
     limit?: number;
     userId?: number;
   }) {
-    console.log('SEARCH SCHEDULES', params);
     const page = params?.page ?? 1;
     const limit = params?.limit ?? 20;
 
@@ -238,8 +237,6 @@ export class SchedulesService {
 
       return deleted;
     } catch (e) {
-      console.log('deleteSchedule error', e);
-
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2025'
