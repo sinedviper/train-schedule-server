@@ -19,9 +19,15 @@ export class SchedulesService {
     const places = await this.prisma.place.findMany({
       where: { id: { in: dto.points.map((p) => p.placeId) } },
     });
+    const placeIds = dto.points.map((p) => p.placeId);
+    const foundIds = new Set(places.map((p) => p.id));
 
-    if (places.length !== dto.points.length) {
-      throw new NotFoundException('One or more places not found');
+    const notFound = placeIds.filter((id) => !foundIds.has(id));
+
+    if (notFound.length > 0) {
+      throw new NotFoundException(
+        `One or more places not found: ${notFound.join(', ')}`,
+      );
     }
   }
 
@@ -39,13 +45,14 @@ export class SchedulesService {
             })),
           },
         },
-        include: { points: true },
+        include: { points: { include: { place: true } } },
       });
 
       this.gateway.notifyScheduleCreated(schedule);
 
       return schedule;
     } catch (e) {
+      if (e instanceof NotFoundException) throw e;
       throw new BadRequestException('Failed to create schedule');
     }
   }
@@ -56,9 +63,9 @@ export class SchedulesService {
     end?: { date: string; placeId: number };
   }) {
     try {
-      return this.prisma.schedule.findMany({
+      return await this.prisma.schedule.findMany({
         where: {
-          ...(filter?.trainType && { train: { type: filter.trainType } }),
+          ...(filter?.trainType && { type: filter.trainType }),
           ...(filter?.start &&
             filter?.end && {
               points: {
@@ -118,7 +125,7 @@ export class SchedulesService {
 
       await this.checkScheduleDto(dto);
 
-      const updated = this.prisma.$transaction(async (tx) => {
+      const updated = await this.prisma.$transaction(async (tx) => {
         await tx.schedulePoint.deleteMany({
           where: { scheduleId: id },
         });
@@ -151,19 +158,36 @@ export class SchedulesService {
 
   async deleteSchedule(id: number) {
     try {
-      const deleted = await this.prisma.schedule.delete({ where: { id } });
+      const deleted = await this.prisma.$transaction(async (tx) => {
+        await tx.schedulePoint.deleteMany({
+          where: { scheduleId: id },
+        });
+
+        await tx.favoriteSchedule.deleteMany({
+          where: { scheduleId: id },
+        });
+
+        const schedule = await tx.schedule.delete({
+          where: { id },
+        });
+
+        return schedule;
+      });
 
       this.gateway.notifyScheduleDeleted(id);
 
       return deleted;
     } catch (e) {
+      console.log('deleteSchedule error', e);
+
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2025'
       ) {
         throw new NotFoundException('Schedule not found');
       }
-      throw new BadRequestException('Failed to update schedule');
+
+      throw new BadRequestException('Failed to delete schedule');
     }
   }
 }

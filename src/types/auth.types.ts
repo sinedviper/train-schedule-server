@@ -11,3 +11,7 @@ export type TJwtPayload = {
   role: Role;
   login: string;
 };
+
+export interface IRequestWithUser extends Request {
+  user: TAuth;
+}

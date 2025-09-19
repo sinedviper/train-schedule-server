@@ -8,13 +8,14 @@ import {
   UseGuards,
   Query,
   Patch,
+  BadRequestException,
 } from '@nestjs/common';
 import { SchedulesService } from './schedules.service';
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { Roles } from '@auth/decorators/roles.decorator';
 import { SchedulesPostDto } from './dto/schedules-post.dto';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
-import { Role } from '@prisma/client';
+import { Role, TrainType } from '@prisma/client';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -65,9 +66,33 @@ export class SchedulesController {
   @Get()
   @ApiOperation({ summary: 'Get all train schedules' })
   @ApiQuery({
-    name: 'trainId',
+    name: 'trainType',
     required: false,
-    description: 'Filter by train ID',
+    description: 'Filter by train type',
+    enum: TrainType,
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Start date (ISO string)',
+    type: String,
+  })
+  @ApiQuery({
+    name: 'startPlaceId',
+    required: false,
+    description: 'Start place ID',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'End date (ISO string)',
+    type: String,
+  })
+  @ApiQuery({
+    name: 'endPlaceId',
+    required: false,
+    description: 'End place ID',
     type: Number,
   })
   @ApiResponse({
@@ -75,10 +100,43 @@ export class SchedulesController {
     description: 'Schedules retrieved successfully',
     type: [SchedulesResponseDto],
   })
-  getSchedules(@Query('trainId') trainId?: string) {
-    return this.schedulesService.getSchedules(
-      trainId ? { trainId: Number(trainId) } : {},
-    );
+  async getSchedules(
+    @Query('trainType') trainType?: TrainType,
+    @Query('startDate') startDate?: string,
+    @Query('startPlaceId') startPlaceId?: string,
+    @Query('endDate') endDate?: string,
+    @Query('endPlaceId') endPlaceId?: string,
+  ) {
+    if (
+      (startDate && !startPlaceId) ||
+      (startPlaceId && !startDate) ||
+      (endDate && !endPlaceId) ||
+      (endPlaceId && !endDate)
+    ) {
+      throw new BadRequestException(
+        'Both date and placeId must be provided for start and end filters',
+      );
+    }
+
+    const filter: {
+      trainType?: TrainType;
+      start?: { date: string; placeId: number };
+      end?: { date: string; placeId: number };
+    } = {};
+
+    if (trainType) {
+      filter.trainType = trainType;
+    }
+
+    if (startDate && startPlaceId) {
+      filter.start = { date: startDate, placeId: Number(startPlaceId) };
+    }
+
+    if (endDate && endPlaceId) {
+      filter.end = { date: endDate, placeId: Number(endPlaceId) };
+    }
+
+    return await this.schedulesService.getSchedules(filter);
   }
 
   @Get(':id')

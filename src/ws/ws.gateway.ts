@@ -22,14 +22,16 @@ export class WsGateway
   }
 
   handleConnection(client: Socket) {
+    console.log('handleConnection', client.data);
     this.logger.debug(
-      `Client connected: ${client.id}, userId: ${client.data.userId}, socket size: ${this.server.sockets.sockets.size}`,
+      `Client connected: ${client.id}, socket size: ${this.server.sockets.sockets.size}`,
     );
   }
 
   handleDisconnect(client: Socket) {
+    console.log('handleDisconnect', client.data);
     this.logger.debug(
-      `Client disconnected: ${client.id}, userId: ${client.data.userId}, socket size: ${this.server.sockets.sockets.size}`,
+      `Client disconnected: ${client.id}, socket size: ${this.server.sockets.sockets.size}`,
     );
   }
 

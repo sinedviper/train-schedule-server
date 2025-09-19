@@ -14,5 +14,5 @@ export class PointPostDto {
     example: '2025-09-16T12:30:00Z',
   })
   @IsDateString()
-  timeToArrive: Date;
+  timeToArrive: string;
 }

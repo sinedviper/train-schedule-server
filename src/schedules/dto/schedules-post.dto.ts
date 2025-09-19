@@ -1,9 +1,9 @@
 import {
   IsArray,
   ValidateNested,
-  IsNumber,
   ArrayMinSize,
   IsEnum,
+  ArrayMaxSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PointPostDto } from '@schedules/dto/point-post.dto';
@@ -24,9 +24,11 @@ export class SchedulesPostDto {
     description: 'List of schedule points',
     type: [PointPostDto],
     minItems: 2,
+    maxItems: 30,
   })
   @IsArray()
   @ArrayMinSize(2, { message: 'Schedule must have at least 2 points' })
+  @ArrayMaxSize(30, { message: 'Schedule can have at most 30 points' })
   @ValidateNested({ each: true })
   @Type(() => PointPostDto)
   points: PointPostDto[];

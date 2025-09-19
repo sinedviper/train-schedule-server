@@ -4,25 +4,17 @@ import {
   Body,
   UnauthorizedException,
   Req,
-  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import type { CookieOptions, Request, Response } from 'express';
+import type { Request } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  private cookieOption: CookieOptions = {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-
   constructor(private authService: AuthService) {}
 
   @Post('register')
@@ -34,15 +26,8 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Validation failed' })
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const tokens = await this.authService.register(dto);
-
-    res.cookie('refresh_token', tokens.refresh_token, this.cookieOption);
-
-    return { access_token: tokens.access_token };
+  async register(@Body() dto: RegisterDto) {
+    return await this.authService.register(dto);
   }
 
   @Post('login')
@@ -55,15 +40,8 @@ export class AuthController {
   })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(
-    @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const tokens = await this.authService.login(dto);
-
-    res.cookie('refresh_token', tokens.refresh_token, this.cookieOption);
-
-    return { access_token: tokens.access_token };
+  async login(@Body() dto: LoginDto) {
+    return await this.authService.login(dto);
   }
 
   @Post('refresh')
@@ -81,20 +59,22 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Refresh token missing or invalid' })
-  async refresh(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const cookies = req.cookies as Record<string, string>;
-    const refreshToken = cookies['refresh_token'];
-
-    if (!refreshToken) throw new UnauthorizedException();
-
-    const newTokens = await this.authService.refreshToken(refreshToken);
+  async refresh(@Body() body: { refreshToken?: string }) {
+    const newTokens = await this.authService.refreshToken(body.refreshToken);
     if (!newTokens) throw new UnauthorizedException();
 
-    res.cookie('refresh_token', newTokens.refresh_token, this.cookieOption);
+    return newTokens;
+  }
 
-    return { access_token: newTokens.access_token };
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout user and clear refresh token cookie' })
+  @ApiResponse({
+    status: 200,
+    description: 'User logged out, refresh token cleared',
+  })
+  async logout(@Req() req: Request) {
+    const access_token = req.header('Authorization');
+    await this.authService.logout(access_token);
+    return { message: 'Logged out successfully' };
   }
 }

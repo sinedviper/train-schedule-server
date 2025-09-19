@@ -15,11 +15,13 @@ export class WsJwtGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const client: Socket = context.switchToWs().getClient();
     const token = client.handshake.auth?.token as string | undefined;
-
+    console.log('token', token);
     if (!token) throw new UnauthorizedException('No token provided');
 
     try {
       const payload = this.jwtService.verify<TJwtPayload>(token);
+
+      console.log('payload', payload);
 
       const data = client.data as TAuth;
 

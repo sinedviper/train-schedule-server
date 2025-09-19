@@ -1,9 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { TrainType } from '@prisma/client';
+import { PlacesResponseDto } from '@places/dto/places-response.dto';
 
 export class SchedulePointDto {
   @ApiProperty({ description: 'Place ID', example: 1 })
   placeId: number;
+
+  @ApiProperty({ description: 'Place', example: { id: 1, name: 'Kyiv' } })
+  place: PlacesResponseDto;
 
   @ApiProperty({
     description: 'Time of arrival at the place',
