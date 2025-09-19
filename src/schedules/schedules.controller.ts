@@ -8,6 +8,7 @@ import {
   UseGuards,
   Query,
   Patch,
+  Req,
 } from '@nestjs/common';
 import { SchedulesService } from './schedules.service';
 import { RolesGuard } from '@auth/guards/roles.guard';
@@ -25,6 +26,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { SchedulesResponseDto } from '@schedules/dto/schedules-response.dto';
+import type { IRequestWithUser } from '../types/auth.types';
 
 @ApiTags('Schedules')
 @ApiBearerAuth()
@@ -130,7 +132,8 @@ export class SchedulesController {
     },
   })
   async getSchedules(
-    @Query('trainType') trainType?: TrainType,
+    @Req() req: IRequestWithUser,
+    @Query('type') type?: TrainType,
     @Query('startDate') startDate?: string,
     @Query('startPlaceId') startPlaceId?: string,
     @Query('endDate') endDate?: string,
@@ -138,23 +141,16 @@ export class SchedulesController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    const filter: {
-      trainType?: TrainType;
-      start?: { date?: string; placeId?: number };
-      end?: { date?: string; placeId?: number };
-      page?: number;
-      limit?: number;
-    } = {
+    const filter = {
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
+      userId: req.user.userId,
+      type,
+      startDate,
+      startPlaceId: startPlaceId ? Number(startPlaceId) : undefined,
+      endDate,
+      endPlaceId: endPlaceId ? Number(endPlaceId) : undefined,
     };
-
-    if (trainType) filter.trainType = trainType;
-    if (startDate && startPlaceId)
-      filter.start = { date: startDate, placeId: Number(startPlaceId) };
-    if (endDate && endPlaceId)
-      filter.end = { date: endDate, placeId: Number(endPlaceId) };
-
     return await this.schedulesService.getSchedules(filter);
   }
 
@@ -167,8 +163,8 @@ export class SchedulesController {
     type: SchedulesResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
-  getSchedule(@Param('id') id: string) {
-    return this.schedulesService.getSchedule(Number(id));
+  getSchedule(@Req() req: IRequestWithUser, @Param('id') id: string) {
+    return this.schedulesService.getSchedule(Number(id), req.user.userId);
   }
 
   @Roles(Role.ADMIN)

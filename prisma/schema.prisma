@@ -47,6 +47,7 @@ model SchedulePoint {
   timeToArrive DateTime
   placeId      Int
   scheduleId   Int
+  order        Int
   createdAt    DateTime @default(now())
   place        Place    @relation(fields: [placeId], references: [id])
   schedule     Schedule @relation(fields: [scheduleId], references: [id])

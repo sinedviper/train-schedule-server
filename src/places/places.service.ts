@@ -48,7 +48,7 @@ export class PlacesService {
         meta: {
           page,
           limit,
-          total: Math.ceil(total / limit),
+          total: Math.max(1, Math.ceil(total / limit)),
         },
       };
     } catch (e) {

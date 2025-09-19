@@ -25,6 +25,13 @@ export class FavoritesService {
           userId,
           scheduleId: dto.scheduleId,
         },
+        include: {
+          schedule: {
+            include: {
+              points: { include: { place: true } },
+            },
+          },
+        },
       });
     } catch (e) {
       if (e instanceof NotFoundException) {
@@ -59,7 +66,7 @@ export class FavoritesService {
         meta: {
           page,
           limit,
-          total: Math.ceil(total / limit),
+          total: Math.max(1, Math.ceil(total / limit)),
         },
       };
     } catch (e) {

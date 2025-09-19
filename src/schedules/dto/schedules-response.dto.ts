@@ -14,6 +14,13 @@ export class SchedulePointDto {
     example: '2025-09-16T12:30:00Z',
   })
   timeToArrive: Date;
+
+  @ApiProperty({
+    type: 'number',
+    description: 'Order of the point in the schedule.',
+    example: 0,
+  })
+  order: number;
 }
 
 export class SchedulesResponseDto {
@@ -26,6 +33,13 @@ export class SchedulesResponseDto {
     example: TrainType.HIGH_SPEED,
   })
   type: TrainType;
+
+  @ApiProperty({
+    type: 'boolean',
+    description: 'Schedule include in the favorite list',
+    example: true,
+  })
+  isFavorite: boolean;
 
   @ApiProperty({
     type: [SchedulePointDto],

@@ -39,9 +39,10 @@ export class SchedulesService {
         data: {
           type: dto.type,
           points: {
-            create: dto.points.map((p) => ({
+            create: dto.points.map((p, k) => ({
               placeId: p.placeId,
               timeToArrive: p.timeToArrive,
+              order: k,
             })),
           },
         },
@@ -59,58 +60,58 @@ export class SchedulesService {
 
   async getSchedules(params?: {
     type?: TrainType;
-    start?: { date?: string; placeId?: number };
-    end?: { date?: string; placeId?: number };
+    startDate?: string;
+    startPlaceId?: number;
+    endDate?: string;
+    endPlaceId?: number;
     page?: number;
     limit?: number;
+    userId?: number;
   }) {
+    console.log('SEARCH SCHEDULES', params);
     const page = params?.page ?? 1;
     const limit = params?.limit ?? 20;
 
     try {
-      let firstPoint = {};
-      let secondPoint = {};
-      if (params?.start?.placeId) {
-        firstPoint = {
-          placeId: params.start.placeId,
+      const startFilter: PointFilter = { points: { some: {} } };
+
+      if (params?.startPlaceId) {
+        startFilter.points.some.placeId = params.startPlaceId;
+      }
+      if (params?.startDate) {
+        startFilter.points.some.timeToArrive = {
+          gte: new Date(params.startDate),
         };
       }
-      if (params?.start?.date) {
-        firstPoint = {
-          timeToArrive: { gte: new Date(params.start.date) },
-        };
-      }
-      if (params?.end?.placeId) {
-        secondPoint = {
-          placeId: params.end.placeId,
-        };
-      }
-      if (params?.end?.date) {
-        secondPoint = {
-          timeToArrive: { lte: new Date(params.end.date) },
-        };
+      if (params?.startPlaceId || params?.startDate) {
+        startFilter.points.some.order = 0;
       }
 
-      const AND: (typeof firstPoint)[] = [];
-      if (Object.keys(firstPoint).length > 0) {
-        AND.push(firstPoint);
+      const endFilter: PointFilter = { points: { some: {} } };
+
+      if (params?.endPlaceId) {
+        endFilter.points.some.placeId = params.endPlaceId;
       }
-      if (Object.keys(secondPoint).length > 0) {
-        AND.push(secondPoint);
+      if (params?.endDate) {
+        endFilter.points.some.timeToArrive = {
+          lte: new Date(params.endDate),
+        };
+      }
+      if (params?.endPlaceId || params?.endDate) {
+        endFilter.points.some.order = { not: 0 };
       }
 
       const [schedules, total] = await this.prisma.$transaction([
         this.prisma.schedule.findMany({
           where: {
             ...(params?.type && { type: params.type }),
-            points: {
-              some: {
-                AND,
-              },
-            },
+            AND: [startFilter, endFilter],
           },
           include: {
             points: { include: { place: true } },
+            favorites: params?.userId
+              ? { where: { userId: params.userId }, select: { id: true } }
+              : false,
           },
           skip: (page - 1) * limit,
           take: limit,
@@ -119,21 +120,20 @@ export class SchedulesService {
         this.prisma.schedule.count({
           where: {
             ...(params?.type && { type: params.type }),
-            points: {
-              some: {
-                AND,
-              },
-            },
+            AND: [startFilter, endFilter],
           },
         }),
       ]);
 
       return {
-        data: schedules,
+        data: schedules.map(({ favorites, ...s }) => ({
+          ...s,
+          isFavorite: favorites && favorites.length > 0,
+        })),
         meta: {
           page,
           limit,
-          total: Math.ceil(total / limit),
+          total: Math.max(1, Math.ceil(total / limit)),
         },
       };
     } catch (e) {
@@ -141,7 +141,7 @@ export class SchedulesService {
     }
   }
 
-  async getSchedule(id: number) {
+  async getSchedule(id: number, userId?: number) {
     try {
       const schedule = await this.prisma.schedule.findUnique({
         where: { id },
@@ -152,7 +152,18 @@ export class SchedulesService {
         throw new NotFoundException('Schedule not found');
       }
 
-      return schedule;
+      let isFavorite = false;
+      if (userId) {
+        const favorite = await this.prisma.favoriteSchedule.findFirst({
+          where: { userId, scheduleId: id },
+        });
+        isFavorite = !!favorite;
+      }
+
+      return {
+        ...schedule,
+        isFavorite,
+      };
     } catch (e) {
       if (e instanceof NotFoundException) {
         throw e;
@@ -183,9 +194,10 @@ export class SchedulesService {
           data: {
             type: dto.type,
             points: {
-              create: dto.points.map((p) => ({
+              create: dto.points.map((p, k) => ({
                 placeId: p.placeId,
                 timeToArrive: p.timeToArrive,
+                order: k,
               })),
             },
           },
@@ -239,3 +251,11 @@ export class SchedulesService {
     }
   }
 }
+
+type FilterValue = { gte: Date } | { lte: Date } | { not: number } | number;
+type PointFilter = Record<
+  'points',
+  {
+    some: Record<string, FilterValue>;
+  }
+>;
