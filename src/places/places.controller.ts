@@ -130,10 +130,11 @@ export class PlacesController {
   @Roles(Role.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a place by ID' })
-  @ApiParam({ name: 'id', description: 'Place ID', type: Number })
+  @ApiParam({ name: 'id', description: 'Place ID', type: Number, example: 1 })
   @ApiResponse({
     status: 200,
     description: 'Place deleted successfully',
+    example: { id: 1 },
   })
   @ApiResponse({
     status: 404,

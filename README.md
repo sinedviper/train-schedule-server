@@ -160,7 +160,7 @@ src/
 
 4. Run database migrations
    ```bash
-   npx prisma migrate dev
+   npx prisma generate && npx prisma migrate dev
    ```
 
 ### Running the Application
@@ -176,19 +176,6 @@ $ npm run start:prod
 
 The API will be available at `http://localhost:3000` by default.
 
-## 🧪 Testing
-
-```bash
-# Unit tests
-$ npm run test
-
-# E2E tests
-$ npm run test:e2e
-
-# Test coverage
-$ npm run test:cov
-```
-
 ## 🌐 API Documentation
 
 After starting the server, you can access the Swagger documentation at:
@@ -203,16 +190,13 @@ Create a `.env` file in the root directory with the following variables:
 ```env
 # App
 PORT=3000
-NODE_ENV=development
 
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/train_schedule"
 
 # JWT
 JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=1d
 
-# Other configuration...
 ```
 
 ## 🤝 Contributing

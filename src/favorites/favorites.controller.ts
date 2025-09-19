@@ -80,10 +80,9 @@ export class FavoritesController {
         meta: {
           type: 'object',
           properties: {
-            total: { type: 'number', example: 50 },
+            total: { type: 'number', example: 3 },
             page: { type: 'number', example: 1 },
             limit: { type: 'number', example: 20 },
-            totalPages: { type: 'number', example: 3 },
           },
         },
       },
@@ -104,8 +103,17 @@ export class FavoritesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove a schedule from user favorites' })
-  @ApiParam({ name: 'id', description: 'Schedule ID to remove', type: Number })
-  @ApiResponse({ status: 200, description: 'Schedule removed from favorites' })
+  @ApiParam({
+    name: 'id',
+    description: 'Schedule ID to remove',
+    type: Number,
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedule removed from favorites',
+    example: { id: 1 },
+  })
   @ApiResponse({ status: 404, description: 'Favorite schedule not found' })
   async removeFavorite(
     @Req() req: IRequestWithUser,

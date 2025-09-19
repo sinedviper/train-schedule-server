@@ -171,7 +171,11 @@ export class SchedulesController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a schedule' })
   @ApiParam({ name: 'id', description: 'Schedule ID', example: 1 })
-  @ApiResponse({ status: 200, description: 'Schedule deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedule deleted successfully',
+    example: { id: 1 },
+  })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
   deleteSchedule(@Param('id') id: string) {
     return this.schedulesService.deleteSchedule(Number(id));
